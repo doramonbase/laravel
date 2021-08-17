@@ -19,15 +19,15 @@
         echo "<div class='d-grid gap-2'><button class='btn btn-success disabled' tabindex='-1' type='button'>Lịch làm việc</button></div>";
         echo "<div class='accordion accordion-flush'>";
 
-        foreach($rsStaff as $rowStaff){
+        foreach($rsStaff as $index=>$rowStaff){
             echo "<div class='accordion-item'>";
-                echo "<h2 class='accordion-header' id='flush-headingOne'>
-                    <button class='accordion-button collapsed' type='button' data-bs-toggle='collapse' data-bs-target='#flush-collapseOne' aria-expanded='false' aria-controls='flush-collapseOne'>";
+                echo "<h5 class='accordion-header'>
+                    <button class='accordion-button collapsed' type='button' data-bs-toggle='collapse' data-bs-target='#coll".$index."' aria-expanded='false' aria-controls='#coll".$index."'>";
                         
                         echo $rowStaff['hour'].":".$rowStaff['minute'];
                 echo "</button>
-                <h2>";
-                echo "<div id='flush-collapseOne' class='accordion-collapse collapse' aria-labelledby='flush-headingOne' data-bs-parent='#accordionFlushExample'>";
+                <h5>";
+                echo "<div id='coll".$index."' class='accordion-collapse collapse'>";
                     echo "<div class='accordion-body'>".$rowStaff['customerName']."<br>".$rowStaff['phone']."</div>";
                 echo "</div>";
             echo "</div>";
