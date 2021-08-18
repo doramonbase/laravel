@@ -100,3 +100,6 @@
 <div class="col-sm-4 inforSidebar">
 
 </div>
+<script>
+    
+</script>

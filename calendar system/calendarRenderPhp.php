@@ -26,13 +26,13 @@
     <title>Calendar PHP</title>
     <style>
         * {
-                padding: 0;
-                margin: 0;
-                box-sizing: border-box;
-                -moz-box-sizing: border-box;
-                -webkit-box-sizing: border-box;
-                -o-box-sizing: border-box;
-                font-family: sans-serif;
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -o-box-sizing: border-box;
+            font-family: sans-serif;
         }
         input::-webkit-outer-spin-button,
         input::-webkit-inner-spin-button {
@@ -114,14 +114,21 @@
             height: 5em;
             font-size: 20px;
             position: relative;
-            padding: 10px;
+            justify-content: center;
+            line-height: 100px;
+            
+        }
+        .days .col span {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 25px;
         }
         .days .col .day {
             position: absolute;
-            top: 0.1em;
+            top: -1.5em;
             left: 0.2em;
         }
-        .days .col:hover:not(.today) {
+        .days .col.enabled:hover:not(.today) {
             background-color: #404040;
         }
 
@@ -258,7 +265,7 @@
         $month = date('n');
         $year = date('Y');
         $conn = mysqli_connect("localhost","root","","calendar_system");
-        $sql = "SELECT * FROM plan WHERE MONTH(meeting_date) = '$month' AND YEAR(meeting_date) = '$year'";
+        $sql = "SELECT COUNT(DAY(meeting_date)) AS count, DAY(meeting_date) AS date FROM plan WHERE MONTH(meeting_date) = '$month' AND YEAR(meeting_date) = '$year' GROUP BY DAY(meeting_date)";
         $rs = mysqli_query($conn,$sql);
 
     ?>
@@ -314,62 +321,90 @@
                                     $yearBack = date('Y');
                                     $monthBack = $month - 1;
                                 }
-                                
+
+                                // Print days in month
+
                                 $countday = 0;
+
+                                // Print days in previous month
+
                                 for($i = date('N',strtotime($yearBack.'-'.$monthBack.'-'.cal_days_in_month(CAL_GREGORIAN, $monthBack, $yearBack))); $i > 0; $i--){
                                     if(date('N',strtotime($yearBack.'-'.$monthBack.'-'.cal_days_in_month(CAL_GREGORIAN, $monthBack, $yearBack))) == 7){
                                         break;
                                     }
                                     echo "<div class='col disabled'><div class='day'>".(date('d',strtotime($yearBack.'-'.$monthBack.'-'.cal_days_in_month(CAL_GREGORIAN, $monthBack, $yearBack))) - $i + 1)."</div></div>";
 
+                                    // Line break day 
+
                                     $countday++;
                                     if($countday % 7 ==0){
                                         echo "<div class='w-100'></div>";
                                     }
                                 }
-                                for($i = 1; $i <= cal_days_in_month(CAL_GREGORIAN, $month, date('Y')); $i++ ){
+
+                                // Print days in this month
+
+                                for($i = 1; $i <= cal_days_in_month(CAL_GREGORIAN, $month, date('Y')); $i++ ){   
                                     if($i == date('d') && $month == date('n') && $year == date('Y')){
 
+                                        // Print today
+
                                         $noteCount = 0;
+
+                                        // Check if today has plan and print the number of plans
+
                                         if(mysqli_num_rows($rs) > 0){
                                             foreach ($rs as $row) {
                                                 
-                                                if($i == date('d', strtotime($row['meeting_date']))){
-                                                    echo "<div class='col today enabled' value='".$i."'><div class='day'>".$i."</div>".$row['name']."<br>".$row['note']."</div>";
+                                                if($i == $row['date']){
+                                                    echo "<div class='col today enabled' value='".$i."'><div class='day'>".$i."</div><span>".$row['count']."</span></div>";
                                                     $noteCount = 1;
                                                     break;
                                                 }
                                             }
                                         }
                                         
+                                        // Print today if it has no plan
 
                                         if($noteCount == 0){
                                             echo "<div class='col today enabled' value='".$i."'><div class='day'>".$i."</div></div>";
                                         }
                                     }else {
+
+                                        // Print other day
+
                                         $noteCount = 0;
+
+                                        // Check if day has plan and print the number of plans
                                         
                                         if(mysqli_num_rows($rs) > 0){
                                             foreach ($rs as $row) {
                                                 
-                                                if($i == date('d', strtotime($row['meeting_date']))){
-                                                    echo "<div class='col enabled' value='".$i."'><div class='day'>".$i."</div>".$row['customerName']."<br>".$row['note']."</div>";
+                                                if($i == $row['date']){
+                                                    echo "<div class='col enabled' value='".$i."'><div class='day'>".$i."</div><span>".$row['count']."</span></div>";
                                                     $noteCount = 1;
                                                     break;
                                                 }
                                             }
                                         }
+
+                                        // Print day if it has no plan
 
                                         if($noteCount == 0){
                                             echo "<div class='col enabled' value='".$i."'><div class='day'>".$i."</div></div>";
                                         }
                                     }
                                     
+                                    // Line break day 
+
                                     $countday++;
                                     if($countday % 7 ==0){
                                         echo "<div class='w-100'></div>";
                                     }
                                 }
+
+                                // Print days in next month
+
                                 $countNextMonth = 1;
                                 for($i = date('N',strtotime($yearNext.'-'.$monthNext.'-1')); $i <= 7; $i++){
                                     if(date('N',strtotime($yearNext.'-'.$monthNext.'-1')) == 1){
@@ -397,7 +432,7 @@
         
         $(document).ready(function(){
             
-            //  Chuyển lịch về sau 1 tháng
+            //  Go to next month
 
             $("#prevBtn").click(function(e){
                 e.preventDefault();
@@ -413,7 +448,7 @@
                 $('.month').html("Tháng " + month + ", " + year);
             });
 
-            // Chuyển lịch về trước 1 tháng
+            // Go to previous month
 
             $("#nextBtn").click(function(e){
                 e.preventDefault();
@@ -429,7 +464,7 @@
                 $('.month').html("Tháng " + month + ", " + year);
             });
 
-            // toggle popup cho từng ngày
+            // Toggle popup for all days in this month
             
             $('.row').on('click','.enabled',function(e){
                 e.preventDefault();
@@ -445,7 +480,7 @@
                 
             });
 
-            // ẩn popup khi nhấn x
+            // Hide popup when click close button
 
             $("#cancel").click(function(e){
                 e.preventDefault();
@@ -453,9 +488,13 @@
                 $(".popup").removeClass("display");
                 $("#myForm").trigger('reset');
                 $(".inforSidebar").empty();
+                $.get("changeCalendar.php", {month:month,year:year},function (data) {
+                    $('.days .row').html(data);
+                });
+                $('.month').html("Tháng " + month + ", " + year);
             });
 
-            // hiển thị phòng khi chọn khoa
+            // display room when chose specilaty
 
             $('.popup').on('change','#specialty',function(e){ 
                 e.preventDefault();
@@ -465,7 +504,7 @@
             });
 
             
-            // autocomplete để tìm tên
+            // autocomplete find staff name
 
             $('.popup').on('keyup','#staffNameInput',function(e){
                 e.preventDefault();
@@ -600,9 +639,9 @@
             });
             
 
-            // Thêm kế hoạch
+            // Insert plan
             
-            $("#insertBtn").click(function(e){
+            $(".popup").on('click','#insertBtn',function(e){
                 e.preventDefault();
                 
                 $.post("insertPlan.php", {cusName:$('#cusName').val(),cusPhone:$('#cusPhone').val(),meetingDate:$('#meetingDate').val(),note:$('#note').val(),staffId:$('#staffId').val()},function (data) {
